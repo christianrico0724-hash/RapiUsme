@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Rapi Usme</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1B1F2A;--sun:#FFC20E;--bg:#F2F4F7;--card:#fff;--line:#D5DAE1;--muted:#5A6272;--wa:#128C4A;--onwa:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--ink:#F2F4F7;--bg:#14171F;--card:#1D212C;--line:#343A49;--muted:#A3ABBB}}
+:root[data-theme="dark"]{--ink:#F2F4F7;--bg:#14171F;--card:#1D212C;--line:#343A49;--muted:#A3ABBB}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;font-size:18px;line-height:1.4}
+.top{background:var(--sun);color:#1B1F2A;padding:28px 20px 56px}
+.wrap{max-width:480px;margin:0 auto}
+h1{margin:0;font-size:44px;font-weight:900;letter-spacing:-1px;line-height:1}
+.top p{margin:8px 0 0;font-size:19px;font-weight:700}
+form{background:var(--card);border:1px solid var(--line);border-radius:16px;margin:-32px 16px 24px;padding:20px;max-width:480px;margin-left:auto;margin-right:auto;width:calc(100% - 32px)}
+label{display:block;font-weight:700;margin:0 0 6px}
+input[type=text],input[type=datetime-local]{width:100%;font:inherit;padding:14px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+input:focus,button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
+.f{margin-bottom:18px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.seg button{font:inherit;font-weight:700;padding:14px;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--sun);border-color:var(--sun);color:#1B1F2A}
+#cuando{display:none;margin-top:10px}
+#cuando.on{display:block}
+.err{color:#C0392B;font-weight:700;font-size:15px;margin-top:6px;min-height:0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .err{color:#FF8A7A}}
+.send{width:100%;font:inherit;font-weight:900;font-size:20px;padding:18px;border:0;border-radius:14px;background:var(--wa);color:var(--onwa);cursor:pointer}
+.send:active{transform:scale(.98)}
+.note{text-align:center;color:var(--muted);font-size:15px;margin:14px 0 0}
+</style>
+</head>
+<body>
+<div class="top"><div class="wrap">
+<h1>Rapi Usme</h1>
+<p>Pide tu transporte por WhatsApp.</p>
+</div></div>
+
+<form id="f" novalidate>
+<div class="f">
+<label for="nombre">Tu nombre</label>
+<input id="nombre" type="text" autocomplete="given-name" placeholder="Ej: Laura">
+</div>
+<div class="f">
+<label for="desde">¿Dónde te recogemos?</label>
+<input id="desde" type="text" autocomplete="street-address" placeholder="Barrio y dirección">
+</div>
+<div class="f">
+<label for="hasta">¿A dónde vas?</label>
+<input id="hasta" type="text" placeholder="Barrio y dirección">
+</div>
+<div class="f">
+<label id="lc">¿Cuándo?</label>
+<div class="seg" role="group" aria-labelledby="lc">
+<button type="button" id="ahora" aria-pressed="true">Ahora</button>
+<button type="button" id="agendar" aria-pressed="false">Agendar</button>
+</div>
+<div id="cuando">
+<label for="fecha" style="margin-top:4px">Día y hora</label>
+<input id="fecha" type="datetime-local">
+</div>
+</div>
+<div class="err" id="err" role="alert"></div>
+<button class="send" type="submit">Pedir por WhatsApp</button>
+<p class="note">Se abre WhatsApp con tu pedido listo. Solo toca enviar.</p>
+</form>
+
+<script>
+var NUM="573126891046";
+var $=function(i){return document.getElementById(i)};
+var modo="ahora";
+try{var n=localStorage.getItem("ru_nombre");if(n)$("nombre").value=n}catch(e){}
+function setModo(m){
+modo=m;
+$("ahora").setAttribute("aria-pressed",m==="ahora");
+$("agendar").setAttribute("aria-pressed",m==="agendar");
+$("cuando").className=m==="agendar"?"on":"";
+}
+$("ahora").onclick=function(){setModo("ahora")};
+$("agendar").onclick=function(){setModo("agendar");$("fecha").focus()};
+$("f").onsubmit=function(e){
+e.preventDefault();
+var nombre=$("nombre").value.trim(),desde=$("desde").value.trim(),hasta=$("hasta").value.trim(),fecha=$("fecha").value;
+var err="";
+if(!nombre)err="Escribe tu nombre.";
+else if(!desde)err="Escribe dónde te recogemos.";
+else if(!hasta)err="Escribe a dónde vas.";
+else if(modo==="agendar"&&!fecha)err="Elige el día y la hora.";
+else if(modo==="agendar"&&new Date(fecha)<new Date())err="Elige una hora que aún no haya pasado.";
+$("err").textContent=err;
+if(err)return;
+try{localStorage.setItem("ru_nombre",nombre)}catch(x){}
+var cuando="Ahora";
+if(modo==="agendar"){
+cuando=new Date(fecha).toLocaleString("es-CO",{weekday:"long",day:"numeric",month:"long",hour:"numeric",minute:"2-digit"});
+}
+var msg="Hola Rapi Usme, quiero pedir un transporte.\n\nNombre: "+nombre+"\nRecogida: "+desde+"\nDestino: "+hasta+"\nCuándo: "+cuando;
+window.open("https://wa.me/"+NUM+"?text="+encodeURIComponent(msg),"_blank");
+};
+$("nombre").oninput=$("desde").oninput=$("hasta").oninput=$("fecha").oninput=function(){$("err").textContent=""};
+</script>
+</body>
+</html>
